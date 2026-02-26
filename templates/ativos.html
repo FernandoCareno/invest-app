@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Ativos</h3>
+
+<form method="POST" class="row g-3">
+
+    <div class="col-md-2">
+        <input type="text" name="ticker" class="form-control" placeholder="Ticker" required>
+    </div>
+
+    <div class="col-md-4">
+        <input type="text" name="nome" class="form-control" placeholder="Nome">
+    </div>
+
+    <div class="col-md-3">
+        <select name="tipo_id" class="form-select" required>
+            <option value="">Selecione o Tipo</option>
+            {% for tipo in tipos %}
+                <option value="{{ tipo[0] }}">{{ tipo[1] }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-success w-100">Salvar</button>
+    </div>
+
+</form>
+
+<hr>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Ticker</th>
+            <th>Nome</th>
+            <th>Tipo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for ativo in ativos %}
+        <tr>
+            <td>{{ ativo[0] }}</td>
+            <td>{{ ativo[1] }}</td>
+            <td>{{ ativo[2] }}</td>
+            <td>{{ ativo[3] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

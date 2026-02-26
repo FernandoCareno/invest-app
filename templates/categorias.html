@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Categorias Financeiras</h3>
+
+<form method="POST" class="row g-3">
+
+    <div class="col-md-4">
+        <input type="text" name="descricao" class="form-control" placeholder="Descrição" required>
+    </div>
+
+    <div class="col-md-3">
+        <select name="tipo" class="form-select" required>
+            <option value="">Selecione</option>
+            <option value="RECEITA">RECEITA</option>
+            <option value="DESPESA">DESPESA</option>
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-primary w-100">Salvar</button>
+    </div>
+
+</form>
+
+<hr>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>ID</th>
+            <th>Descrição</th>
+            <th>Tipo</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in categorias %}
+        <tr>
+            <td>{{ c[0] }}</td>
+            <td>{{ c[1] }}</td>
+            <td>{{ c[2] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

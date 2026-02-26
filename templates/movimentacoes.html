@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h3>Movimentações Financeiras</h3>
+
+<form method="POST" class="row g-3">
+
+    <div class="col-md-2">
+        <input type="date" name="data_movimento" class="form-control" required>
+    </div>
+
+    <div class="col-md-3">
+        <select name="categoria_id" class="form-select" required>
+            <option value="">Selecione Categoria</option>
+            {% for c in categorias %}
+                <option value="{{ c[0] }}">
+                    {{ c[1] }} - {{ c[2] }}
+                </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-2">
+        <input type="number" step="0.01" name="valor" class="form-control" placeholder="Valor" required>
+    </div>
+
+    <div class="col-md-3">
+        <input type="text" name="descricao" class="form-control" placeholder="Descrição">
+    </div>
+
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-success w-100">Salvar</button>
+    </div>
+
+</form>
+
+<hr>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Data</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th>Valor</th>
+            <th>Descrição</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for m in movimentacoes %}
+        <tr>
+            <td>{{ m[0].strftime('%d/%m/%Y') }}</td>
+            <td>{{ m[1] }}</td>
+            <td>{{ m[2] }}</td>
+            <td>R$ {{ "%.2f"|format(m[3]) }}</td>
+            <td>{{ m[4] }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
