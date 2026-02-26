@@ -10,7 +10,7 @@ app = Flask(__name__)
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_connection():
-    return psycopg2.connect(DATABASE_URL)
+    return psycopg2.connect(DATABASE_URL, connect_timeout=5)
 
 def init_db():
     """Cria tabelas e insere dados iniciais (seed) no Postgres do Render."""
@@ -94,7 +94,15 @@ def init_db():
     cur.close()
     conn.close()
 
-    init_db()
+#   init_db()
+_db_iniciado = False
+
+@app.before_request
+def _init_db_once():
+    global _db_iniciado
+    if not _db_iniciado:
+        init_db()
+        _db_iniciado = True
 
 # ==================================================
 # HOME
