@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>InvestApp</title>
+    <title>InvestApp - Sistema de Controle Financeiro</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <!-- Bootstrap CSS -->
@@ -22,6 +22,10 @@
     <!-- Menu -->
     <div class="collapse navbar-collapse" id="menu">
       <ul class="navbar-nav ms-auto">
+
+        <li class="nav-item">
+          <a class="nav-link" href="/">Dashboard</a>
+        </li>
 
         <li class="nav-item">
           <a class="nav-link" href="/tipos">Tipos Ativos</a>
@@ -53,6 +57,19 @@
 </nav>
 
 <div class="container mt-4">
+
+    <!-- Mensagens (flash) -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
     {% block content %}{% endblock %}
 </div>
 

@@ -1,58 +1,227 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>Aportes</h3>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">Aportes</h3>
 
-<form method="POST" class="row g-3">
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/aportes">Limpar filtros</a>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#novoAporte">
+      + Novo
+    </button>
+  </div>
+</div>
 
-    <div class="col-md-3">
-        <select name="ativo_id" class="form-select" required>
-            <option value="">Selecione o Ativo</option>
-            {% for ativo in ativos %}
-                <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
-            {% endfor %}
-        </select>
-    </div>
+<!-- =========================
+     FILTROS (GET)
+========================= -->
+<form method="GET" class="row g-2 align-items-end mb-3">
 
-    <div class="col-md-2">
-        <input type="date" name="data_aporte" class="form-control" required>
-    </div>
+  <div class="col-md-4">
+    <label class="form-label mb-1">Ativo</label>
+    <select name="ativo_id" class="form-select">
+      <option value="">(Todos)</option>
+      {% for ativo in ativos %}
+        <option value="{{ ativo[0] }}" {% if filtros.ativo_id == (ativo[0]|string) %}selected{% endif %}>
+          {{ ativo[1] }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <div class="col-md-2">
-        <input type="number" step="1" name="quantidade" class="form-control" placeholder="Quantidade" required>
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Data</label>
+    <input type="date" name="data_aporte" class="form-control" value="{{ filtros.data_aporte }}">
+  </div>
 
-    <div class="col-md-2">
-        <input type="number" step="0.01" name="valor_unitario" class="form-control" placeholder="Valor Unitário" required>
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Quantidade</label>
+    <input type="number" step="1" name="quantidade" class="form-control" value="{{ filtros.quantidade }}" placeholder="Ex: 10">
+  </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Salvar</button>
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Valor Unit.</label>
+    <input type="number" step="0.01" name="valor_unitario" class="form-control" value="{{ filtros.valor_unitario }}" placeholder="Ex: 9.90">
+  </div>
+
+  <div class="col-md-2 d-grid">
+    <button type="submit" class="btn btn-success">Pesquisar</button>
+  </div>
 
 </form>
 
-<hr>
+<!-- =========================
+     NOVO (POST)
+========================= -->
+<div id="novoAporte" class="collapse mb-4">
+  <div class="card">
+    <div class="card-header">
+      Novo Aporte
+    </div>
+    <div class="card-body">
+      <form method="POST" class="row g-2 align-items-end">
 
-<table class="table table-bordered table-striped">
+        <div class="col-md-4">
+          <label class="form-label mb-1">Ativo</label>
+          <select name="ativo_id" class="form-select" required>
+            <option value="">Selecione...</option>
+            {% for ativo in ativos %}
+              <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label mb-1">Data</label>
+          <input type="date" name="data_aporte" class="form-control" required>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label mb-1">Quantidade</label>
+          <input type="number" step="1" name="quantidade" class="form-control" required>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label mb-1">Valor Unit.</label>
+          <input type="number" step="0.01" name="valor_unitario" class="form-control" required>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     GRID
+========================= -->
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr>
-            <th>Ativo</th>
-            <th>Data</th>
-            <th>Quantidade</th>
-            <th>Valor Unitário</th>
-        </tr>
+      <tr>
+        <th style="width: 90px;">Ações</th>
+        <th>Ativo</th>
+        <th style="width: 140px;">Data</th>
+        <th style="width: 140px;">Quantidade</th>
+        <th style="width: 160px;">Valor Unitário</th>
+      </tr>
     </thead>
     <tbody>
-        {% for aporte in aportes %}
-        <tr>
-            <td>{{ aporte[0] }}</td>
-            <td>{{ aporte[1].strftime('%d/%m/%Y') }}</td>
-            <td>{{ aporte[2] | int }}</td>
-            <td>R$ {{ "%.2f"|format(aporte[3]) }}</td>
-        </tr>
-        {% endfor %}
+      {% for ap in aportes %}
+      {# ap = (id, ticker, data, quantidade, valor_unitario, ativo_id) #}
+      <tr>
+<td class="text-center">
+  <div class="d-flex justify-content-center gap-2">
+
+    <button
+      class="btn btn-sm btn-outline-primary"
+      data-bs-toggle="modal"
+      data-bs-target="#modalEditarAporte"
+      data-id="{{ ap[0] }}"
+      data-ativo_id="{{ ap[5] }}"
+      data-data="{{ ap[2] }}"
+      data-quantidade="{{ ap[3] }}"
+      data-valor="{{ ap[4] }}"
+      title="Editar"
+    >
+      ✏️
+    </button>
+
+    <form method="POST"
+          action="/aportes/delete"
+          onsubmit="return confirm('Tem certeza que deseja excluir este aporte?');"
+          class="m-0">
+
+      <input type="hidden" name="id" value="{{ ap[0] }}">
+
+      <button class="btn btn-sm btn-outline-danger" title="Excluir">
+        🗑️
+      </button>
+    </form>
+
+  </div>
+</td>
+
+        <td>{{ ap[1] }}</td>
+        <td>{{ ap[2].strftime('%d/%m/%Y') }}</td>
+        <td>{{ ap[3] | int }}</td>
+        <td>R$ {{ "%.2f"|format(ap[4]) }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- =========================
+     MODAL EDITAR
+========================= -->
+<div class="modal fade" id="modalEditarAporte" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="/aportes/edit" class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Aporte</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit_id">
+
+        <div class="row g-2">
+          <div class="col-md-4">
+            <label class="form-label mb-1">Ativo</label>
+            <select name="ativo_id" id="edit_ativo_id" class="form-select" required>
+              {% for ativo in ativos %}
+                <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label mb-1">Data</label>
+            <input type="date" name="data_aporte" id="edit_data_aporte" class="form-control" required>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label mb-1">Quantidade</label>
+            <input type="number" step="1" name="quantidade" id="edit_quantidade" class="form-control" required>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label mb-1">Valor Unit.</label>
+            <input type="number" step="0.01" name="valor_unitario" id="edit_valor_unitario" class="form-control" required>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // Preenche o modal de edição com os dados do botão clicado
+  const modal = document.getElementById('modalEditarAporte');
+  modal.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+
+    document.getElementById('edit_id').value = btn.getAttribute('data-id');
+    document.getElementById('edit_ativo_id').value = btn.getAttribute('data-ativo_id');
+
+    // data-data vem como objeto/valor do backend; no HTML vira algo tipo "2026-02-06" ou "2026-02-06 00:00:00"
+    const rawDate = btn.getAttribute('data-data');
+    const iso = rawDate ? rawDate.substring(0, 10) : "";
+    document.getElementById('edit_data_aporte').value = iso;
+
+    document.getElementById('edit_quantidade').value = btn.getAttribute('data-quantidade');
+    document.getElementById('edit_valor_unitario').value = btn.getAttribute('data-valor');
+  });
+</script>
 
 {% endblock %}

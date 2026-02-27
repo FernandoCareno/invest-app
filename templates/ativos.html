@@ -1,54 +1,220 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>Ativos</h3>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">Ativos</h3>
 
-<form method="POST" class="row g-3">
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/ativos">Limpar filtros</a>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#novoAtivo">
+      + Novo
+    </button>
+  </div>
+</div>
 
-    <div class="col-md-2">
-        <input type="text" name="ticker" class="form-control" placeholder="Ticker" required>
-    </div>
+<!-- =========================
+     FILTROS
+========================= -->
+<form method="GET" class="row g-2 align-items-end mb-3">
 
-    <div class="col-md-4">
-        <input type="text" name="nome" class="form-control" placeholder="Nome">
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Ticker</label>
+    <input type="text"
+           name="ticker"
+           class="form-control"
+           placeholder="Ex: PETR4"
+           value="{{ filtros.ticker }}">
+  </div>
 
-    <div class="col-md-3">
-        <select name="tipo_id" class="form-select" required>
-            <option value="">Selecione o Tipo</option>
-            {% for tipo in tipos %}
-                <option value="{{ tipo[0] }}">{{ tipo[1] }}</option>
-            {% endfor %}
-        </select>
-    </div>
+  <div class="col-md-4">
+    <label class="form-label mb-1">Nome</label>
+    <input type="text"
+           name="nome"
+           class="form-control"
+           placeholder="Pesquisar nome"
+           value="{{ filtros.nome }}">
+  </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Salvar</button>
-    </div>
+  <div class="col-md-3">
+    <label class="form-label mb-1">Tipo</label>
+    <select name="tipo_id" class="form-select">
+      <option value="">Todos</option>
+      {% for tipo in tipos %}
+        <option value="{{ tipo[0] }}" {% if filtros.tipo_id and filtros.tipo_id|int == tipo[0] %}selected{% endif %}>
+          {{ tipo[1] }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <div class="col-md-3 d-grid">
+    <button type="submit" class="btn btn-success">
+      Pesquisar
+    </button>
+  </div>
 
 </form>
 
-<hr>
+<!-- =========================
+     NOVO
+========================= -->
+<div id="novoAtivo" class="collapse mb-4">
+  <div class="card">
+    <div class="card-header">
+      Novo Ativo
+    </div>
+    <div class="card-body">
+      <form method="POST" class="row g-2 align-items-end">
 
-<table class="table table-bordered table-striped">
+        <div class="col-md-2">
+          <label class="form-label mb-1">Ticker</label>
+          <input type="text" name="ticker" class="form-control" required>
+        </div>
+
+        <div class="col-md-5">
+          <label class="form-label mb-1">Nome</label>
+          <input type="text" name="nome" class="form-control">
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label mb-1">Tipo</label>
+          <select name="tipo_id" class="form-select" required>
+            <option value="">Selecione</option>
+            {% for tipo in tipos %}
+              <option value="{{ tipo[0] }}">{{ tipo[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary">
+            Salvar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     GRID
+========================= -->
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Ticker</th>
-            <th>Nome</th>
-            <th>Tipo</th>
-        </tr>
+      <tr>
+        <th style="width: 120px;">Ações</th>
+        <th>ID</th>
+        <th>Ticker</th>
+        <th>Nome</th>
+        <th>Tipo</th>
+      </tr>
     </thead>
     <tbody>
-        {% for ativo in ativos %}
-        <tr>
-            <td>{{ ativo[0] }}</td>
-            <td>{{ ativo[1] }}</td>
-            <td>{{ ativo[2] }}</td>
-            <td>{{ ativo[3] }}</td>
-        </tr>
-        {% endfor %}
+      {% for ativo in ativos %}
+      <tr>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2">
+
+            <!-- EDITAR -->
+            <button
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalEditarAtivo"
+              data-id="{{ ativo[0] }}"
+              data-ticker="{{ ativo[1] }}"
+              data-nome="{{ ativo[2] }}"
+              data-tipoid="{{ ativo[3] }}"
+              title="Editar"
+            >
+              ✏️
+            </button>
+
+            <!-- EXCLUIR -->
+            <form method="POST"
+                  action="/ativos/delete"
+                  onsubmit="return confirm('Tem certeza que deseja excluir este ativo?');"
+                  class="m-0">
+              <input type="hidden" name="id" value="{{ ativo[0] }}">
+              <button class="btn btn-sm btn-outline-danger" title="Excluir">
+                🗑️
+              </button>
+            </form>
+
+          </div>
+        </td>
+
+        <td>{{ ativo[0] }}</td>
+        <td>{{ ativo[1] }}</td>
+        <td>{{ ativo[2] }}</td>
+        <td>{{ ativo[4] }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- =========================
+     MODAL EDITAR
+========================= -->
+<div class="modal fade" id="modalEditarAtivo" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="/ativos/edit" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Ativo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit_id">
+
+        <div class="mb-2">
+          <label class="form-label">Ticker</label>
+          <input type="text" name="ticker" id="edit_ticker" class="form-control" required>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Nome</label>
+          <input type="text" name="nome" id="edit_nome" class="form-control">
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Tipo</label>
+          <select name="tipo_id" id="edit_tipo_id" class="form-select" required>
+            {% for tipo in tipos %}
+              <option value="{{ tipo[0] }}">{{ tipo[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">
+          Salvar alterações
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalAtivo = document.getElementById('modalEditarAtivo');
+
+  modalAtivo.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+
+    document.getElementById('edit_id').value = btn.getAttribute('data-id');
+    document.getElementById('edit_ticker').value = btn.getAttribute('data-ticker');
+    document.getElementById('edit_nome').value = btn.getAttribute('data-nome') || '';
+    document.getElementById('edit_tipo_id').value = btn.getAttribute('data-tipoid');
+  });
+</script>
 
 {% endblock %}

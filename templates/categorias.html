@@ -1,47 +1,181 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>Categorias Financeiras</h3>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">Categorias Financeiras</h3>
 
-<form method="POST" class="row g-3">
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/categorias">Limpar filtros</a>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#novaCategoria">
+      + Novo
+    </button>
+  </div>
+</div>
 
-    <div class="col-md-4">
-        <input type="text" name="descricao" class="form-control" placeholder="Descrição" required>
-    </div>
+<!-- =========================
+     FILTROS
+========================= -->
+<form method="GET" class="row g-2 align-items-end mb-3">
 
-    <div class="col-md-3">
-        <select name="tipo" class="form-select" required>
-            <option value="">Selecione</option>
-            <option value="RECEITA">RECEITA</option>
-            <option value="DESPESA">DESPESA</option>
-        </select>
-    </div>
+  <div class="col-md-5">
+    <label class="form-label mb-1">Descrição</label>
+    <input type="text"
+           name="descricao"
+           class="form-control"
+           placeholder="Pesquisar descrição"
+           value="{{ filtros.descricao }}">
+  </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Salvar</button>
-    </div>
+  <div class="col-md-3">
+    <label class="form-label mb-1">Tipo</label>
+    <select name="tipo" class="form-select">
+      <option value="">Todos</option>
+      <option value="RECEITA" {% if filtros.tipo == 'RECEITA' %}selected{% endif %}>RECEITA</option>
+      <option value="DESPESA" {% if filtros.tipo == 'DESPESA' %}selected{% endif %}>DESPESA</option>
+    </select>
+  </div>
+
+  <div class="col-md-2 d-grid">
+    <button type="submit" class="btn btn-success">Pesquisar</button>
+  </div>
 
 </form>
 
-<hr>
+<!-- =========================
+     NOVO
+========================= -->
+<div id="novaCategoria" class="collapse mb-4">
+  <div class="card">
+    <div class="card-header">
+      Nova Categoria
+    </div>
+    <div class="card-body">
+      <form method="POST" class="row g-2 align-items-end">
 
-<table class="table table-bordered table-striped">
+        <div class="col-md-6">
+          <label class="form-label mb-1">Descrição</label>
+          <input type="text" name="descricao" class="form-control" required>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label mb-1">Tipo</label>
+          <select name="tipo" class="form-select" required>
+            <option value="">Selecione</option>
+            <option value="RECEITA">RECEITA</option>
+            <option value="DESPESA">DESPESA</option>
+          </select>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     GRID
+========================= -->
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>Descrição</th>
-            <th>Tipo</th>
-        </tr>
+      <tr>
+        <th style="width: 120px;">Ações</th>
+        <th style="width: 80px;">ID</th>
+        <th>Descrição</th>
+        <th style="width: 140px;">Tipo</th>
+      </tr>
     </thead>
     <tbody>
-        {% for c in categorias %}
-        <tr>
-            <td>{{ c[0] }}</td>
-            <td>{{ c[1] }}</td>
-            <td>{{ c[2] }}</td>
-        </tr>
-        {% endfor %}
+      {% for c in categorias %}
+      <tr>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2">
+
+            <!-- EDITAR -->
+            <button
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalEditarCategoria"
+              data-id="{{ c[0] }}"
+              data-descricao="{{ c[1] }}"
+              data-tipo="{{ c[2] }}"
+              title="Editar"
+            >
+              ✏️
+            </button>
+
+            <!-- EXCLUIR -->
+            <form method="POST"
+                  action="/categorias/delete"
+                  onsubmit="return confirm('Tem certeza que deseja excluir esta categoria?');"
+                  class="m-0">
+              <input type="hidden" name="id" value="{{ c[0] }}">
+              <button class="btn btn-sm btn-outline-danger" title="Excluir">🗑️</button>
+            </form>
+
+          </div>
+        </td>
+
+        <td>{{ c[0] }}</td>
+        <td>{{ c[1] }}</td>
+        <td>{{ c[2] }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- =========================
+     MODAL EDITAR
+========================= -->
+<div class="modal fade" id="modalEditarCategoria" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="/categorias/edit" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Categoria</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit_id">
+
+        <div class="mb-2">
+          <label class="form-label">Descrição</label>
+          <input type="text" name="descricao" id="edit_descricao" class="form-control" required>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Tipo</label>
+          <select name="tipo" id="edit_tipo" class="form-select" required>
+            <option value="RECEITA">RECEITA</option>
+            <option value="DESPESA">DESPESA</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalCat = document.getElementById('modalEditarCategoria');
+
+  modalCat.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+
+    document.getElementById('edit_id').value = btn.getAttribute('data-id');
+    document.getElementById('edit_descricao').value = btn.getAttribute('data-descricao');
+    document.getElementById('edit_tipo').value = btn.getAttribute('data-tipo');
+  });
+</script>
 
 {% endblock %}

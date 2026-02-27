@@ -1,52 +1,203 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>Dividendos</h3>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">Dividendos</h3>
 
-<form method="POST" class="row g-3">
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/dividendos">Limpar filtros</a>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#novoDividendo">
+      + Novo
+    </button>
+  </div>
+</div>
 
-    <div class="col-md-3">
-        <select name="ativo_id" class="form-select" required>
-            <option value="">Selecione o Ativo</option>
-            {% for ativo in ativos %}
-                <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
-            {% endfor %}
-        </select>
-    </div>
+<!-- =========================
+     FILTROS
+========================= -->
+<form method="GET" class="row g-2 align-items-end mb-3">
 
-    <div class="col-md-3">
-        <input type="date" name="data_pagamento" class="form-control" required>
-    </div>
+  <div class="col-md-4">
+    <label class="form-label mb-1">Ativo</label>
+    <select name="ativo_id" class="form-select">
+      <option value="">(Todos)</option>
+      {% for ativo in ativos %}
+        <option value="{{ ativo[0] }}" {% if filtros.ativo_id == (ativo[0]|string) %}selected{% endif %}>
+          {{ ativo[1] }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <div class="col-md-3">
-        <input type="number" step="0.01" name="valor_recebido" class="form-control" placeholder="Valor Recebido" required>
-    </div>
+  <div class="col-md-3">
+    <label class="form-label mb-1">Data Pagamento</label>
+    <input type="date" name="data_pagamento" class="form-control" value="{{ filtros.data_pagamento }}">
+  </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Salvar</button>
-    </div>
+  <div class="col-md-3">
+    <label class="form-label mb-1">Valor Recebido</label>
+    <input type="number" step="0.01" name="valor_recebido" class="form-control" value="{{ filtros.valor_recebido }}"
+           placeholder="Ex: 10.50">
+  </div>
+
+  <div class="col-md-2 d-grid">
+    <button type="submit" class="btn btn-success">Pesquisar</button>
+  </div>
 
 </form>
 
-<hr>
+<!-- =========================
+     NOVO
+========================= -->
+<div id="novoDividendo" class="collapse mb-4">
+  <div class="card">
+    <div class="card-header">Novo Dividendo</div>
+    <div class="card-body">
+      <form method="POST" class="row g-2 align-items-end">
 
-<table class="table table-bordered table-striped">
+        <div class="col-md-4">
+          <label class="form-label mb-1">Ativo</label>
+          <select name="ativo_id" class="form-select" required>
+            <option value="">Selecione...</option>
+            {% for ativo in ativos %}
+              <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label mb-1">Data Pagamento</label>
+          <input type="date" name="data_pagamento" class="form-control" required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label mb-1">Valor Recebido</label>
+          <input type="number" step="0.01" name="valor_recebido" class="form-control" required>
+        </div>
+
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     GRID
+========================= -->
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr>
-            <th>Ativo</th>
-            <th>Data Pagamento</th>
-            <th>Valor Recebido</th>
-        </tr>
+      <tr>
+        <th style="width: 120px;">Ações</th>
+        <th>Ativo</th>
+        <th style="width: 160px;">Data Pagamento</th>
+        <th style="width: 170px;">Valor Recebido</th>
+      </tr>
     </thead>
     <tbody>
-        {% for d in dividendos %}
-        <tr>
-            <td>{{ d[0] }}</td>
-			<td>{{ d[1].strftime('%d/%m/%Y') }}</td>
-			<td>R$ {{ "%.2f"|format(d[2]) }}</td>
-        </tr>
-        {% endfor %}
+      {% for d in dividendos %}
+      {# d = (id, ticker, data_pagamento, valor_recebido, ativo_id) #}
+      <tr>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2">
+
+            <!-- EDITAR -->
+            <button
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalEditarDividendo"
+              data-id="{{ d[0] }}"
+              data-ativo_id="{{ d[4] }}"
+              data-data="{{ d[2] }}"
+              data-valor="{{ d[3] }}"
+              title="Editar"
+            >
+              ✏️
+            </button>
+
+            <!-- EXCLUIR -->
+            <form method="POST"
+                  action="/dividendos/delete"
+                  onsubmit="return confirm('Tem certeza que deseja excluir este dividendo?');"
+                  class="m-0">
+              <input type="hidden" name="id" value="{{ d[0] }}">
+              <button class="btn btn-sm btn-outline-danger" title="Excluir">🗑️</button>
+            </form>
+
+          </div>
+        </td>
+
+        <td>{{ d[1] }}</td>
+        <td>{{ d[2].strftime('%d/%m/%Y') }}</td>
+        <td>R$ {{ "%.2f"|format(d[3]) }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- =========================
+     MODAL EDITAR
+========================= -->
+<div class="modal fade" id="modalEditarDividendo" tabindex="-1">
+  <div class="modal-dialog">
+    <form method="POST" action="/dividendos/edit" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Dividendo</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit_id">
+
+        <div class="mb-2">
+          <label class="form-label">Ativo</label>
+          <select name="ativo_id" id="edit_ativo_id" class="form-select" required>
+            {% for ativo in ativos %}
+              <option value="{{ ativo[0] }}">{{ ativo[1] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Data Pagamento</label>
+          <input type="date" name="data_pagamento" id="edit_data_pagamento" class="form-control" required>
+        </div>
+
+        <div class="mb-2">
+          <label class="form-label">Valor Recebido</label>
+          <input type="number" step="0.01" name="valor_recebido" id="edit_valor_recebido" class="form-control" required>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalDiv = document.getElementById('modalEditarDividendo');
+
+  modalDiv.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+
+    document.getElementById('edit_id').value = btn.getAttribute('data-id');
+    document.getElementById('edit_ativo_id').value = btn.getAttribute('data-ativo_id');
+
+    const rawDate = btn.getAttribute('data-data');
+    const iso = rawDate ? rawDate.substring(0, 10) : "";
+    document.getElementById('edit_data_pagamento').value = iso;
+
+    document.getElementById('edit_valor_recebido').value = btn.getAttribute('data-valor');
+  });
+</script>
 
 {% endblock %}

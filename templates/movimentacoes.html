@@ -1,62 +1,228 @@
 {% extends "base.html" %}
 {% block content %}
 
-<h3>Movimentações Financeiras</h3>
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h3 class="mb-0">Movimentações Financeiras</h3>
 
-<form method="POST" class="row g-3">
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-secondary" href="/movimentacoes">Limpar filtros</a>
+    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#novaMov">
+      + Novo
+    </button>
+  </div>
+</div>
 
-    <div class="col-md-2">
-        <input type="date" name="data_movimento" class="form-control" required>
-    </div>
+<!-- =========================
+     FILTROS
+========================= -->
+<form method="GET" class="row g-2 align-items-end mb-3">
 
-    <div class="col-md-3">
-        <select name="categoria_id" class="form-select" required>
-            <option value="">Selecione Categoria</option>
-            {% for c in categorias %}
-                <option value="{{ c[0] }}">
-                    {{ c[1] }} - {{ c[2] }}
-                </option>
-            {% endfor %}
-        </select>
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Data</label>
+    <input type="date" name="data_movimento" class="form-control" value="{{ filtros.data_movimento }}">
+  </div>
 
-    <div class="col-md-2">
-        <input type="number" step="0.01" name="valor" class="form-control" placeholder="Valor" required>
-    </div>
+  <div class="col-md-4">
+    <label class="form-label mb-1">Categoria</label>
+    <select name="categoria_id" class="form-select">
+      <option value="">(Todas)</option>
+      {% for c in categorias %}
+        <option value="{{ c[0] }}" {% if filtros.categoria_id == (c[0]|string) %}selected{% endif %}>
+          {{ c[1] }} - {{ c[2] }}
+        </option>
+      {% endfor %}
+    </select>
+  </div>
 
-    <div class="col-md-3">
-        <input type="text" name="descricao" class="form-control" placeholder="Descrição">
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Tipo</label>
+    <select name="tipo" class="form-select">
+      <option value="">(Todos)</option>
+      <option value="RECEITA" {% if filtros.tipo == 'RECEITA' %}selected{% endif %}>RECEITA</option>
+      <option value="DESPESA" {% if filtros.tipo == 'DESPESA' %}selected{% endif %}>DESPESA</option>
+    </select>
+  </div>
 
-    <div class="col-md-2">
-        <button type="submit" class="btn btn-primary w-100">Salvar</button>
-    </div>
+  <div class="col-md-2">
+    <label class="form-label mb-1">Valor</label>
+    <input type="number" step="0.01" name="valor" class="form-control" value="{{ filtros.valor }}" placeholder="Ex: 150.00">
+  </div>
+
+  <div class="col-md-2 d-grid">
+    <button type="submit" class="btn btn-success">Pesquisar</button>
+  </div>
 
 </form>
 
-<hr>
+<!-- =========================
+     NOVO
+========================= -->
+<div id="novaMov" class="collapse mb-4">
+  <div class="card">
+    <div class="card-header">Nova Movimentação</div>
+    <div class="card-body">
+      <form method="POST" class="row g-2 align-items-end">
 
-<table class="table table-bordered table-striped">
+        <div class="col-md-2">
+          <label class="form-label mb-1">Data</label>
+          <input type="date" name="data_movimento" class="form-control" required>
+        </div>
+
+        <div class="col-md-4">
+          <label class="form-label mb-1">Categoria</label>
+          <select name="categoria_id" class="form-select" required>
+            <option value="">Selecione...</option>
+            {% for c in categorias %}
+              <option value="{{ c[0] }}">{{ c[1] }} - {{ c[2] }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="form-label mb-1">Valor</label>
+          <input type="number" step="0.01" name="valor" class="form-control" required>
+        </div>
+
+        <div class="col-md-3">
+          <label class="form-label mb-1">Descrição</label>
+          <input type="text" name="descricao" class="form-control" placeholder="Opcional">
+        </div>
+
+        <div class="col-md-1 d-grid">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- =========================
+     GRID
+========================= -->
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
     <thead class="table-dark">
-        <tr>
-            <th>Data</th>
-            <th>Categoria</th>
-            <th>Tipo</th>
-            <th>Valor</th>
-            <th>Descrição</th>
-        </tr>
+      <tr>
+        <th style="width: 120px;">Ações</th>
+        <th style="width: 140px;">Data</th>
+        <th>Categoria</th>
+        <th style="width: 110px;">Tipo</th>
+        <th style="width: 140px;">Valor</th>
+        <th>Descrição</th>
+      </tr>
     </thead>
     <tbody>
-        {% for m in movimentacoes %}
-        <tr>
-            <td>{{ m[0].strftime('%d/%m/%Y') }}</td>
-            <td>{{ m[1] }}</td>
-            <td>{{ m[2] }}</td>
-            <td>R$ {{ "%.2f"|format(m[3]) }}</td>
-            <td>{{ m[4] }}</td>
-        </tr>
-        {% endfor %}
+      {% for m in movimentacoes %}
+      {# m = (id, data, categoria_desc, tipo, valor, descricao, categoria_id) #}
+      <tr>
+        <td class="text-center">
+          <div class="d-flex justify-content-center gap-2">
+
+            <!-- EDITAR -->
+            <button
+              class="btn btn-sm btn-outline-primary"
+              data-bs-toggle="modal"
+              data-bs-target="#modalEditarMov"
+              data-id="{{ m[0] }}"
+              data-data="{{ m[1] }}"
+              data-categoria_id="{{ m[6] }}"
+              data-valor="{{ m[4] }}"
+              data-descricao="{{ m[5] }}"
+              title="Editar"
+            >
+              ✏️
+            </button>
+
+            <!-- EXCLUIR -->
+            <form method="POST"
+                  action="/movimentacoes/delete"
+                  onsubmit="return confirm('Tem certeza que deseja excluir esta movimentação?');"
+                  class="m-0">
+              <input type="hidden" name="id" value="{{ m[0] }}">
+              <button class="btn btn-sm btn-outline-danger" title="Excluir">🗑️</button>
+            </form>
+
+          </div>
+        </td>
+
+        <td>{{ m[1].strftime('%d/%m/%Y') }}</td>
+        <td>{{ m[2] }}</td>
+        <td>{{ m[3] }}</td>
+        <td>R$ {{ "%.2f"|format(m[4]) }}</td>
+        <td>{{ m[5] }}</td>
+      </tr>
+      {% endfor %}
     </tbody>
-</table>
+  </table>
+</div>
+
+<!-- =========================
+     MODAL EDITAR
+========================= -->
+<div class="modal fade" id="modalEditarMov" tabindex="-1">
+  <div class="modal-dialog modal-lg">
+    <form method="POST" action="/movimentacoes/edit" class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title">Editar Movimentação</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" name="id" id="edit_id">
+
+        <div class="row g-2">
+          <div class="col-md-3">
+            <label class="form-label">Data</label>
+            <input type="date" name="data_movimento" id="edit_data" class="form-control" required>
+          </div>
+
+          <div class="col-md-5">
+            <label class="form-label">Categoria</label>
+            <select name="categoria_id" id="edit_categoria_id" class="form-select" required>
+              {% for c in categorias %}
+                <option value="{{ c[0] }}">{{ c[1] }} - {{ c[2] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Valor</label>
+            <input type="number" step="0.01" name="valor" id="edit_valor" class="form-control" required>
+          </div>
+
+          <div class="col-md-12">
+            <label class="form-label">Descrição</label>
+            <input type="text" name="descricao" id="edit_descricao" class="form-control" placeholder="Opcional">
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar alterações</button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+<script>
+  const modalMov = document.getElementById('modalEditarMov');
+
+  modalMov.addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+
+    document.getElementById('edit_id').value = btn.getAttribute('data-id');
+    document.getElementById('edit_categoria_id').value = btn.getAttribute('data-categoria_id');
+    document.getElementById('edit_valor').value = btn.getAttribute('data-valor');
+    document.getElementById('edit_descricao').value = btn.getAttribute('data-descricao') || "";
+
+    const rawDate = btn.getAttribute('data-data');
+    const iso = rawDate ? rawDate.substring(0, 10) : "";
+    document.getElementById('edit_data').value = iso;
+  });
+</script>
 
 {% endblock %}
