@@ -22,25 +22,6 @@ Bootstrap 5
 Render (deploy)
 Git / GitHub
 
-📂 Estrutura do Projeto
-invest_app/
-│
-├── app.py
-├── requirements.txt
-├── .env
-│
-├── templates/
-│   ├── base.html
-│   ├── inicial.html
-│   ├── tipos_ativos.html
-│   ├── ativos.html
-│   ├── aportes.html
-│   ├── dividendos.html
-│   ├── categorias.html
-│   ├── movimentacoes.html
-│
-└── static/
-
 🗄 Estrutura do Banco de Dados
 📌 Tabelas
 tipos_ativos
